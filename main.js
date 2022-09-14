@@ -22,7 +22,7 @@ function main() {
 
   let fragmentShaderObject = gl.createShader(gl.FRAGMENT_SHADER);
   gl.shaderSource(fragmentShaderObject, fragmentShaderCode);
-  gl.compileShader(vertexShaderObject);
+  gl.compileShader(fragmentShaderObject);
 
   let shaderProgram = gl.createProgram();
   gl.attachShader(shaderProgram, vertexShaderObject);
