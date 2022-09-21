@@ -1,12 +1,14 @@
+let freeze = false;
+
 function main() {
   let canvas = document.getElementById("kanvas");
   let gl = canvas.getContext("webgl");
 
   let vertices = [
-    0.5, 0.5, 0.0, 1.0, 1.0,   // A: kann atas (CYAN)
-    0.0, 0.0, 1.0, 0.0, 1.0,   // B: bawah tengah (MAGENTA)
-    -0.5, 0.5, 1.0, 1.0, 0.0,  // C: kiri atas (KUNING)
-    0.0, 1.0, 1.0, 1.0, 1.0,   // D: tengah atas (PUTIH)
+    0.5, 0.0, 0.0, 1.0, 1.0,   // A: kann atas (CYAN)
+    0.0, -0.5, 1.0, 0.0, 1.0,   // B: bawah tengah (MAGENTA)
+    -0.5, 0.0, 1.0, 1.0, 0.0,  // C: kiri atas (KUNING)
+    0.0, 0.5, 1.0, 1.0, 1.0,   // D: tengah atas (PUTIH)
   ];
 
   let buffer = gl.createBuffer();
@@ -19,10 +21,11 @@ function main() {
     attribute vec3 aColor;
     varying vec3 vColor;
     uniform float uTheta;
+    uniform vec2 uTranslation;
 
     void main() {
-      float x = -sin(uTheta) * aPosition.x + cos(uTheta) * aPosition.y;
-      float y = sin(uTheta) * aPosition.y + cos(uTheta) * aPosition.x;
+      float x = -sin(uTheta) * aPosition.x + cos(uTheta) * aPosition.y + uTranslation.x;
+      float y = sin(uTheta) * aPosition.y + cos(uTheta) * aPosition.x + uTranslation.y;
       gl_PointSize = 10.0;
       gl_Position = vec4(x, y, 0.0, 1.0);
 
@@ -59,9 +62,11 @@ function main() {
 
   // Variabel lokal
   let theta = 0.0;
+  let translation = [0.0, 0.0];
 
   // Variabel pointer ke GLSL
   let uTHeta = gl.getUniformLocation(shaderProgram, "uTheta");
+  let uTranslation = gl.getUniformLocation(shaderProgram, "uTranslation");
 
   // Mengajari GPU bagaimana caranya mengoleksi
   // nilai posisi dari ARRAY_BUFFER
@@ -77,16 +82,103 @@ function main() {
   );
   gl.enableVertexAttribArray(aColor);
 
+  function toggleFreeze(e) {
+    setTimeout(() => {
+      freeze = !freeze;
+    }, freeze ? 0 : 500)
+  }
+
+  canvas.addEventListener("mouseenter", toggleFreeze);
+  canvas.addEventListener("mouseleave", toggleFreeze);
+
+  let controller = {
+    w: false,
+    a: false,
+    s: false,
+    d: false
+  }
+
+  window.onkeydown = event => {
+    if (event.key == 'w')
+    {
+      controller.w = true
+    } 
+    if (event.key == 'a')
+    {
+      controller.a = true
+    }
+    if (event.key == 's')
+    {
+      controller.s = true
+    }
+    if (event.key == 'd')
+    {
+      controller.d = true
+    }
+  }
+
+  window.onkeyup = event => {
+    if (event.key == 'w')
+    {
+      controller.w = false
+    } 
+    if (event.key == 'a')
+    {
+      controller.a = false
+    }
+    if (event.key == 's')
+    {
+      controller.s = false
+    }
+    if (event.key == 'd')
+    {
+      controller.d = false
+    }
+  }
+
   function render() {
     gl.clearColor(1.0, 0.65, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    theta += 0.1;
+    if (!freeze) {
+      theta += 0.003;
+      theta = (theta > 2.0 * Math.PI) ? 0.0 : curveValue(theta, 0.0, 2.0 * Math.PI, 0.94);
+    }
+
+    if (controller.w) {
+      translation[1] += 0.01;
+    }
+    if (controller.a) {
+      translation[0] -= 0.01;
+    }
+    if (controller.s) {
+      translation[1] -= 0.01;
+    }
+    if (controller.d) {
+      translation[0] += 0.01;
+    }
+
     gl.uniform1f(uTHeta, theta);
+    gl.uniform2f(uTranslation, translation[0], translation[1]);
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
-    // render();
+    requestAnimationFrame(render);
   }
 
-  setInterval(render, 1000 / 60);
+  requestAnimationFrame(render);
+}
+
+function minValue(a, b) {
+  return a > b ? b : a; 
+}
+
+function maxValue(a, b) {
+  return a > b ? a : b;
+}
+
+function curveValue(x, min, max, exponential) {
+  let val = minValue(x, (maxValue(min, max)))
+  val = maxValue(val, minValue(min, max))
+  
+  return min + ((max - min) * (Math.pow((val - min), exponential) / Math.pow((max - min), exponential)));
 }
