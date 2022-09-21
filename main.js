@@ -2,12 +2,7 @@ function main() {
   let canvas = document.getElementById("kanvas");
   let gl = canvas.getContext("webgl");
 
-  let vertices = [
-    0.5, 0.5,
-    0.0, 0.0,
-    -0.5, 0.5,
-    0.0, 1.0
-  ];
+  let vertices = [0.5, 0.5, 0.0, 0.0, -0.5, 0.5, 0.0, 1.0];
 
   let buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -60,5 +55,5 @@ function main() {
   gl.clearColor(1.0, 0.65, 0.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  gl.drawArrays(gl.LINES, 0, 4);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 }
