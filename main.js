@@ -18,10 +18,11 @@ function main() {
     attribute vec2 aPosition;
     attribute vec3 aColor;
     varying vec3 vColor;
+    uniform float uTheta;
 
     void main() {
-      float x = aPosition.x;
-      float y = aPosition.y;
+      float x = -sin(uTheta) * aPosition.x + cos(uTheta) * aPosition.y;
+      float y = sin(uTheta) * aPosition.y + cos(uTheta) * aPosition.x;
       gl_PointSize = 10.0;
       gl_Position = vec4(x, y, 0.0, 1.0);
 
@@ -56,6 +57,12 @@ function main() {
   gl.linkProgram(shaderProgram);
   gl.useProgram(shaderProgram);
 
+  // Variabel lokal
+  let theta = 0.0;
+
+  // Variabel pointer ke GLSL
+  let uTHeta = gl.getUniformLocation(shaderProgram, "uTheta");
+
   // Mengajari GPU bagaimana caranya mengoleksi
   // nilai posisi dari ARRAY_BUFFER
   // untuk setiap verteks yang sedang diproses
@@ -70,8 +77,16 @@ function main() {
   );
   gl.enableVertexAttribArray(aColor);
 
-  gl.clearColor(1.0, 0.65, 0.0, 1.0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
+  function render() {
+    gl.clearColor(1.0, 0.65, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+    theta += 0.1;
+    gl.uniform1f(uTHeta, theta);
+
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+    // render();
+  }
+
+  setInterval(render, 1000 / 60);
 }
